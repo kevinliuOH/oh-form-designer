@@ -1,0 +1,18 @@
+<div class="toast-container position-fixed top-0 end-0 p-3">
+  <div *ngFor="let toast of toasts" role="alert" aria-live="assertive" aria-atomic="true"
+       class="fade show alert oh-alert shadow d-flex align-items-center justify-content-start"
+       [ngClass]="'alert-' + toast.type"
+  >
+    <span class="icon fal mr-3 pt-1"
+          [ngClass]="{
+            'fa-times text-primary': toast.type === 'info',
+            'fa-check-circle text-success': toast.type === 'success',
+            'fa-exclamation-triangle text-black': toast.type === 'warning',
+            'fa-exclamation-circle text-danger': toast.type === 'danger'
+          }"
+    ></span>
+    <div class="flex-grow-1 text-nowrap">
+      {{ toast.message }}
+    </div>
+  </div>
+</div>

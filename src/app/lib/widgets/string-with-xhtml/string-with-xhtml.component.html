@@ -1,0 +1,58 @@
+<input *ngIf="schema.widget.id ==='hidden'; else notHiddenFieldBlock"
+       name="{{name}}" type="hidden" [formControl]="control">
+<ng-template #notHiddenFieldBlock>
+  <div [ngClass]="{'row': labelPosition === 'left', 'm-0': true}">
+    <lfb-label *ngIf="!nolabel"
+               [for]="id"
+               [title]="schema.title"
+               [helpMessage]="schema.description"
+               [ngClass]="labelClasses+' ps-0 pe-1'"
+    ></lfb-label>
+    <div [ngClass]="controlClasses">
+      <div class="input-group">
+        <input [name]="name" [attr.readonly]="(schema.widget.id!=='color') && schema.readOnly?true:null"
+               class="form-control form-control-sm"
+               [attr.type]="!schema.widget.id || schema.widget.id === 'string' ? 'text' : schema.widget.id"
+               [attr.id]="id"  [formControl]="control" [attr.placeholder]="schema.placeholder"
+               [attr.maxLength]="schema.maxLength || null"
+               [attr.minLength]="schema.minLength || null"
+               [attr.required]="schema.isRequired ? '' : null"
+               [lfbDisableControl]="schema.disabled">
+        <div ngbDropdown class="" #myDropdown="ngbDropdown" placement="bottom-right">
+          <button type="button" class="btn btn-sm btn-outline-primary rounded-0 rounded-end" [attr.id]="id+'dropdownButton'" ngbDropdownToggle>{{xhtmlButtonLabel()}}</button>
+          <div ngbDropdownMenu [attr.aria-labelledby]="id+'dropdownButton'" style="{height: 200px; width: 200px}">
+            <mat-tab-group [mat-stretch-tabs]="true">
+              <mat-tab label="HTML">
+                <ng-template matTabContent>
+                  <form class="p-1" [attr.id]="id+'dropdownForm'">
+                    <div>
+                      <quill-editor name="editor" [styles]="{height: '200px', width: '600px'}" [(ngModel)]="xhtmlValue" (ngModelChange)="htmlChanged($event)"></quill-editor>
+                    </div>
+                  </form>
+                </ng-template>
+              </mat-tab>
+              <mat-tab label="HTML Text">
+                <ng-template matTabContent>
+                  <textarea style="height:200px; width:600px" [(ngModel)]="xhtmlValue" (ngModelChange)="htmlChanged($event)"></textarea>
+                </ng-template>
+              </mat-tab>
+            </mat-tab-group>
+            <button class="btn btn-sm btn-primary" (click)="myDropdown.close()">Close</button>
+          </div>
+        </div>
+      </div>
+      <ng-container *ngFor="let error of errors">
+        <small *ngIf="formProperty.value && error"
+               class="text-danger form-text" role="alert"
+        >{{error.modifiedMessage || error.originalMessage}}</small>
+      </ng-container>
+      <ng-container *ngFor="let error of errors">
+        <small *ngIf="!formProperty.value && error && error.code === 'OBJECT_MISSING_REQUIRED_PROPERTY'"
+               class="text-danger form-text" role="alert"
+        >{{error.originalMessage}}</small>
+      </ng-container>
+    </div>
+  </div>
+</ng-template>
+
+

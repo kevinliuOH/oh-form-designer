@@ -1,0 +1,20 @@
+<div class="modal-header">
+    <h5 class="modal-title" style="font-weight: bold;">{{title}}</h5>
+    <button type="button" class="btn-close" aria-label="Close"
+            (click)="activeModal.dismiss(false)"
+            (keydown.enter)="activeModal.dismiss(false)"
+    ></button>
+  </div>
+  <div class="modal-body" style="font-size: 1rem;">
+    {{message}}
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-primary"
+            (keydown.enter)="activeModal.dismiss(false)"
+            (click)="activeModal.dismiss(false)"
+    >No</button>
+    <button type="button" class="btn btn-primary"
+            (keydown.enter)="activeModal.close(true)"
+            (click)="activeModal.close(true)"
+    >Yes</button>
+  </div>

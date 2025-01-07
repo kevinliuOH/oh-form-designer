@@ -20,4 +20,10 @@ describe('ItemComponent', () => {
     expect(component).toBeTruthy();
     expect(component.uiItemEditor).toBeDefined();
   });
+
+  it('should compile json item editor', async () => {
+    component.toggleEditType({});
+    await runOnPushChangeDetection(fixture);
+    expect(component.jsonItemEditor).toBeDefined();
+  });
 });

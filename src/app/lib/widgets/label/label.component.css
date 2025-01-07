@@ -44,3 +44,12 @@ label {
   top: -6px !important;
   bottom: auto;
 }
+
+.info-icon {
+  width: 15px; /* Match desired size */
+  height: 15px; /* Match desired size */
+  object-fit: cover; /* Ensures the image fits well */
+  display: flex; /* Centering if needed */
+  justify-content: center; /* Center content horizontally */
+  align-items: center; /* Center content vertically */
+}

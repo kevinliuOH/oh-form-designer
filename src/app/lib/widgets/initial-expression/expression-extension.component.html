@@ -1,0 +1,48 @@
+<div [ngClass]="{'row': labelPosition === 'left', 'm-0': true}">
+  <lfb-label *ngIf="!nolabel"
+             [for]="id"
+             [title]="schema.title"
+             [helpMessage]="schema.description"
+             [ngClass]="labelClasses"
+  ></lfb-label>
+  <div [ngClass]="controlClasses">
+    <div [ngClass]="controlClasses+' m-auto ms-0'">
+      <div [ngClass]="{'row': labelPosition === 'left', 'm-0': true}" *ngIf="getProperty('name')">
+        <lfb-label *ngIf="!nolabel"
+                   [title]="getProperty('name').schema.title"
+                   [helpMessage]="getProperty('name').schema.description"
+                   [ngClass]="labelClasses"
+        ></lfb-label>
+        <div  [ngClass]="controlClasses">
+          <div [ngClass]="controlClasses+' m-auto ms-0'">
+            <lfb-form-element nolabel="false" [formProperty]="getProperty('name')"></lfb-form-element>
+          </div>
+        </div>
+      </div>
+      <div [ngClass]="{'row': labelPosition === 'left', 'm-0': true}">
+        <lfb-label *ngIf="!nolabel"
+                   [title]="getProperty('language').schema.title"
+                   [helpMessage]="getProperty('language').schema.description"
+                   [ngClass]="labelClasses"
+        ></lfb-label>
+        <div  [ngClass]="controlClasses">
+          <div [ngClass]="controlClasses+' m-auto ms-0'">
+            <lfb-form-element nolabel="false" [formProperty]="getProperty('language')"></lfb-form-element>
+          </div>
+        </div>
+      </div>
+      <div [ngClass]="{'row': labelPosition === 'left', 'm-0': true}">
+        <lfb-label *ngIf="!nolabel"
+                   [title]="getProperty('expression').schema.title"
+                   [helpMessage]="getProperty('expression').schema.description"
+                   [ngClass]="labelClasses"
+        ></lfb-label>
+        <div  [ngClass]="controlClasses">
+          <div [ngClass]="controlClasses+' m-auto ms-0'">
+            <lfb-form-element nolabel="false" [formProperty]="getProperty('expression')"></lfb-form-element>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

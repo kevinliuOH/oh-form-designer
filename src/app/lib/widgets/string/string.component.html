@@ -23,6 +23,11 @@
                class="text-danger form-text" role="alert"
         >{{error.modifiedMessage || error.originalMessage}}</small>
       </ng-container>
+      <ng-container *ngFor="let error of errors">
+        <small *ngIf="!formProperty.value && error && error.code === 'OBJECT_MISSING_REQUIRED_PROPERTY'"
+               class="text-danger form-text" role="alert"
+        >{{error.originalMessage}}</small>
+      </ng-container>
     </div>
   </div>
 </ng-template>

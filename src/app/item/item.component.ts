@@ -20,6 +20,7 @@ import {MatInput} from '@angular/material/input';
 import {ITreeNode} from '@bugsplat/angular-tree-component/lib/defs/api';
 import {FormService} from '../services/form.service';
 import {NgxSchemaFormComponent} from '../ngx-schema-form/ngx-schema-form.component';
+import {ItemJsonEditorComponent} from '../lib/widgets/item-json-editor/item-json-editor.component';
 import {NgbActiveModal, NgbDropdown, NgbModal, NgbModalRef} from '@ng-bootstrap/ng-bootstrap';
 import {BehaviorSubject, Observable, of, Subscription} from 'rxjs';
 import {MatDialog} from '@angular/material/dialog';
@@ -132,18 +133,18 @@ export class ErrorTooltip {
 @Component({
   selector: 'lfb-confirm-dlg',
   template: `
-    <div class="modal-header bg-primary">
-      <h4 class="modal-title text-white">{{title}}</h4>
-      <button type="button" class="btn-close btn-close-white" aria-label="Close"
+    <div class="modal-header">
+      <h5 class="modal-title" style="font-weight: bold;">{{title}}</h5>
+      <button type="button" class="btn-close outline-0" aria-label="Close"
               (click)="activeModal.dismiss(false)"
               (keydown.enter)="activeModal.dismiss(false)"
       ></button>
     </div>
-    <div class="modal-body">
-      <p>{{message}}</p>
+    <div class="modal-body" style="font-size: 1rem;">
+      {{message}}
     </div>
     <div class="modal-footer">
-      <button type="button" class="btn btn-primary"
+      <button type="button" class="btn btn-outline-primary"
               (keydown.enter)="activeModal.dismiss(false)"
               (click)="activeModal.dismiss(false)"
       >No</button>
@@ -180,6 +181,7 @@ export class ItemComponent implements AfterViewInit, OnChanges, OnDestroy {
   nodeMenuIcon = faEllipsisH;
 
   @ViewChild('tree') treeComponent: TreeComponent;
+  @ViewChild('jsonEditor') jsonItemEditor: ItemJsonEditorComponent;
   @ViewChild('uiEditor') uiItemEditor: NgxSchemaFormComponent;
   @ViewChild('formSearch') sInput: MatInput;
   @ViewChild('drawer', { read: ElementRef }) sidenavEl: ElementRef;
@@ -234,6 +236,7 @@ export class ItemComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Output()
   itemChange = new EventEmitter<any []>();
   isTreeExpanded = false;
+  editType = 'ui';
   itemEditorSchema: any;
   editor = 'ngx';
   loincType = LoincItemType.PANEL;
@@ -525,6 +528,14 @@ export class ItemComponent implements AfterViewInit, OnChanges, OnDestroy {
    */
   defaultLinkId(node: ITreeNode): string {
     return node.data[FormService.TREE_NODE_ID];
+  }
+
+
+  /**
+   * Toggle between ui and json
+   */
+  toggleEditType(event) {
+    this.editType = this.editType === 'json' ? 'ui' : 'json';
   }
 
 

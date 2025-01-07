@@ -16,7 +16,7 @@ import {CommonModule} from '@angular/common';
     <label *ngIf="title" [attr.for]="for" class="col-form-label align-self-center p-0" [attr.id]="labelId"
     >{{title}}&nbsp;</label><div *ngIf="helpMessage" tabindex="0" class="btn border-0 p-0 b-0" [matTooltip]="helpMessage"
                             [attr.aria-label]="'Tooltip for '+title+': '+helpMessage"
-    ><fa-icon [icon]="helpIcon" aria-hidden="true"></fa-icon></div
+    ><img src="assets/images/circle-info-light.svg" alt="circle-info-light" class="info-icon"></div
     >
   `,
   styleUrls: ['./label.component.css'],

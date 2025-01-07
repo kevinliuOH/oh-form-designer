@@ -15,6 +15,8 @@ import {ObjectProperty} from '@lhncbc/ngx-schema-form/lib/model';
 import {Util} from '../lib/util';
 import { SharedObjectService } from '../services/shared-object.service';
 import { ValidationService, EnableWhenValidationObject } from '../services/validation.service';
+import { DateFormatExtensionComponent } from "../lib/widgets/date-format-extension/date-format-extension.component";
+import { dateFormatPatterns } from "../lib/date-util";
 
 /**
  * This class is intended to isolate customization of sf-form instance.
@@ -49,10 +51,19 @@ export class SfFormWrapperComponent implements OnInit, OnChanges, AfterViewInit 
       this.formService.loading = false;
       return null;
     },
-    '/type': this.validateType.bind(this),
+    '/type': (value: string, formProperty: FormProperty, rootProperty: PropertyGroup) => {
+      // Internally represent display type as group. Identifying display/group type is deferred until
+      // the form is converted to json output.
+      if(value === 'display') {
+        formProperty.setValue('group', true);
+      }
+      return null;
+    },
     '/enableWhen': this.validateEnableWhenAll.bind(this),
     '/enableWhen/*': this.validateEnableWhenSingle.bind(this),
-    '/linkId': this.validateLinkId.bind(this)
+    '/linkId': this.validateLinkId.bind(this),
+    '/__$attachmentFileSize': this.validateAttachmentFileSizeValue.bind(this)
+
   };
 
   mySchema: any = {properties: {}};
@@ -107,7 +118,8 @@ export class SfFormWrapperComponent implements OnInit, OnChanges, AfterViewInit 
    * @param value - Angular event
    */
   updateValue(value) {
-    if(!this.loading) { // Avoid emitting the changes while loading.
+    if (!this.loading) { // Avoid emitting the changes while loading.
+      this.setInitialValue(value);
       this.valueChange.emit(value);
     }
   }
@@ -131,6 +143,35 @@ export class SfFormWrapperComponent implements OnInit, OnChanges, AfterViewInit 
     if(!Util.isEmpty(rootProperty?.searchProperty('/code').value)) {
       // Loading is done. Change of value should emit the value in valueChanged().
       rootProperty?.searchProperty('/__$codeYesNo').setValue(true, false);
+      ret = true;
+    }
+    if(!Util.isEmpty(rootProperty?.searchProperty('/initial').value)) {
+      const initial = rootProperty?.searchProperty('/initial').value;
+      const type = rootProperty?.searchProperty('/type').value;
+      if (type === 'date' || type === 'dateTime' && initial?.length) {
+        const ext = rootProperty?.searchProperty('/extension').value;
+        const entryFormat = ext?.filter(ex => ex.url === DateFormatExtensionComponent.DATE_FORMAT_URI);
+        if (entryFormat && entryFormat.length > 0) {
+          const format = entryFormat[0].valueString.toUpperCase();
+          if (type === 'date') {
+            const index = dateFormatPatterns.findIndex(p => p.format === format);
+            if (index >= 0) {
+              rootProperty?.searchProperty('/__$initial').setValue([{
+                [`valueDate${index + 1}`]: initial[0].valueDate
+              }], false);
+            }
+          } else {
+            const index = dateFormatPatterns.findIndex(p => p.format === format.substring(0, 10));
+            if (index >= 0) {
+              rootProperty?.searchProperty('/__$initial').setValue([{
+                [`valueDateTime${index + 1}`]: initial[0].valueDateTime
+              }], false);
+            }
+          }
+        }
+      } else {
+        rootProperty?.searchProperty('/__$initial').setValue(initial, false);
+      }
       ret = true;
     }
     return ret;
@@ -239,9 +280,9 @@ export class SfFormWrapperComponent implements OnInit, OnChanges, AfterViewInit 
    * @returns Array of errors if validation fails, or null if it passes. This returns an error in the following cases:
    *          1. (ENABLEWHEN_INVALID_QUESTION) - The question, which is the 'linkId', is an invalid 'linkId'.
    *          2. (ENABLEWHEN_INVALID_OPERATOR) - The selected operator value does not match the available operator
-   *                                             options. 
-   *          3. (ENABLEWHEN_ANSWER_REQUIRED)  - The question is provided and valid, the operator is provided and not 
-   *                                            and not equal to 'exists', and the answer is empty. 
+   *                                             options.
+   *          3. (ENABLEWHEN_ANSWER_REQUIRED)  - The question is provided and valid, the operator is provided and not
+   *                                            and not equal to 'exists', and the answer is empty.
    */
   validateEnableWhenAll (value: any, arrayProperty: ArrayProperty, rootProperty: PropertyGroup): any[] | null {
     let errors = null;
@@ -286,6 +327,28 @@ export class SfFormWrapperComponent implements OnInit, OnChanges, AfterViewInit 
       formProperty.extendErrors(errors);
     }
     return errors;
+  }
+
+  setInitialValue(value) {
+    if (value.__$initial) {
+      if (value.type === 'date' || value.type === 'dateTime') {
+        if (!value.__$initial || !value.__$initial.length) {
+          delete value.initial;
+        } else {
+          if (value.type === 'date') {
+            value.initial = [{
+              valueDate: value.__$initial[0][Object.keys(value.__$initial[0]).filter(key => key.startsWith('valueDate'))[0]]
+            }];
+          } else {
+            value.initial = [{
+              valueDateTime: value.__$initial[0][Object.keys(value.__$initial[0]).filter(key => key.startsWith('valueDateTime'))[0]]
+            }];
+          }
+        }
+      } else {
+        value.initial = value.__$initial;
+      }
+    }
   }
 
   /**
@@ -339,5 +402,31 @@ export class SfFormWrapperComponent implements OnInit, OnChanges, AfterViewInit 
     this.validationErrorsChanged.next(errors);
 
     return errors;
+  }
+
+  validateAttachmentFileSizeValue(value: any, formProperty: ObjectProperty, rootProperty: PropertyGroup):any []{
+    let errors: any[] = [];
+
+    const errorCode = 'INVALID_INPUT';
+    const err: any = {};
+    err.code = errorCode;
+    err.path = `#${formProperty.canonicalPathNotation}`;
+    err.params = [value];
+
+    // Check if value is an integer and positive
+    const isInteger = /^[1-9]\d*$/.test(value); // Regex for positive integers (no zero, no negative)
+    if (!isInteger) {
+      err.message = 'Value must be an integer.';
+      errors.push(err);
+      return errors;
+    }
+    // Additional file size validation (if required)
+    const maxFileSize = 5000000; // Example: 5MB
+    if (value > maxFileSize) {
+      err.message = `File size exceeds the limit of ${maxFileSize / (1024 * 1024)} MB.`;
+      errors.push(err);
+      return errors;
+    }
+    return null; // No error
   }
 }

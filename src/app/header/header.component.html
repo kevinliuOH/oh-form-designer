@@ -1,0 +1,50 @@
+<nav id="header" class="ps-0 pe-0 d-flex">
+    <mat-icon id="logo" svgIcon="home" aria-label="Home"></mat-icon>
+    <div id="siteNameBox" class="d-flex flex-column align-self-baseline ps-2">
+      <div class="fs-4"><a class="btn btn-link p-0" id="siteName" href="/">OH eForms Designer <span *ngIf="!isProduction" class="environment-name">- {{env}}</span></a> 
+      </div>
+      <div class="fs-6">A tool for building HL7<sup>®</sup> FHIR<sup>®</sup> Questionnaires</div>
+      
+      <!-- Question Mark Icon Toolbar (Independent Section) -->
+      <div class="header-right">
+        <mat-toolbar class="mat-elevation-z4 header-toolbar">
+          <button
+            mat-icon-button
+            [matMenuTriggerFor]="helpMenu"
+            aria-label="Help menu"
+            aria-haspopup="true"
+            class="help-icon"
+            matTooltip="Help"
+          >
+            <mat-icon>help_outline</mat-icon>
+          </button>
+        </mat-toolbar>
+       <mat-menu #helpMenu class="custom-menu">
+          <button mat-menu-item class="hover-button custom-menu-item" (click)="getHelpInfo()">
+            <mat-icon>settings</mat-icon>
+            <span class="menu-text">Help</span>
+          </button>
+          <button mat-menu-item class="hover-button custom-menu-item" (click)="getContactUs()">
+            <mat-icon>contact_mail</mat-icon>
+            <span class="menu-text">Contact Us</span>
+          </button>
+        </mat-menu>
+      </div>
+
+    </div>
+    <div class="float-lg-right" *ngIf="isFirebaseEnabled">
+      <div *ngIf="!isUserSignedIn">
+        <button class="btn btn-sm btn-primary" (click)="showSignInDialog()">
+          <button class="btn border-0 m-0 p-0" matTooltip="Login with OAuth authenticators">Sign in</button>
+        </button>
+      </div>
+      <div *ngIf="isUserSignedIn">
+        <span>{{userProfile.displayName}}</span>
+        <button class="btn btn-sm btn-primary" (click)="signOut()">
+          <button class="btn border-0 m-0 p-0"
+                [ngbTooltip]="userProfile.displayName + userProfile.email ? (' : ' + userProfile.email) : ''">Sign out</button>
+        </button>
+      </div>
+      <div *ngIf="loginError">{{loginError.message}}</div>
+    </div>
+</nav>

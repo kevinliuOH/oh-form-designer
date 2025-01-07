@@ -1,0 +1,20 @@
+  <div class="widget" [ngClass]="{'row': labelPosition === 'left', 'm-0' : true}">
+    <lfb-label *ngIf="!nolabel"
+      [for]="id"
+      [title]="schema.title"
+      [helpMessage]="schema.description"
+      [ngClass]="labelClasses"
+    ></lfb-label>
+    <div [ngClass]="controlClasses">
+        <select
+          [formControl]="control"
+          name="{{name}}"
+          [attr.id]="id"
+          class="form-select form-select-sm"
+        >
+          <option *ngFor="let option of options" [ngValue]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+  </div>

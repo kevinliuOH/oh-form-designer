@@ -5,7 +5,7 @@
         "showFields": [
           { "field": "text", "col": 12 },
           { "field": "prefix", "col": 12},
-
+          { "field": "linkId", "col": 12},
           { "field": "__$codeYesNo", "col": 12 },
           { "field": "code", "col": 12 },
           { "field": "__$helpText", "col": 12},
@@ -16,6 +16,13 @@
           { "field": "answerOption", "title": "Answer choices", "col": 12 },
           { "field": "__$itemControl", "col": 12 },
           { "field": "__$itemControlGroup", "col": 12 },
+          { "field": "__$entryFormat", "col": 12 },
+          { "field": "__$allowedMimeTypes", "col": 12 },
+          { "field": "__$attachmentFileSize", "col": 12 },
+          { "field": "__$initial", "title": "Default value", "col": 12},
+          { "field": "__$initialExpression", "title": "Initial expression value", "col": 12 },
+          { "field": "__$itemPopulationContext", "col": 12 },
+          { "field": "__$itemExtractionContext", "col": 12 },
           { "field": "__$units", "col": 12 }
         ]
       },
@@ -55,6 +62,7 @@
     "text": "Question text",
     "type": "Item type",
     "initial": "Initial value (default)",
+    "__$initial": "Initial value (default)",
     "enableWhen": "Conditional display"
   }
 }

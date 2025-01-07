@@ -1,0 +1,129 @@
+#header {
+    /* margin-bottom: 20px; */
+    position: relative;
+    /* font-size: 12px;*/
+    font-family: 'Droid Sans', Arial, Helvetica, sans-serif;
+    color: #202020;
+    border-top: 2px solid #0BACB6;
+    border-bottom: 7px solid #17b4e3;
+    /*line-height: normal;*/
+    height: 95px;
+    background: transparent;
+    align-items: center;
+  }
+
+  #header a {
+    color: #1E4193;
+    text-decoration: none;
+  }
+
+  #logo {
+    float: left;
+    width: 172px;
+    height: 84px;
+  }
+
+  #logo {
+    display: block;
+  }
+
+  #logo .site-name-slogan {
+    font-size: 14px;
+    position: relative;
+    top: 10px;
+    left: -2px;
+  }
+
+  #logo .site-name-slogan span {
+    display: block;
+    font-size: 24px;
+    position: relative;
+    left: -2px;
+  }
+
+  #logo .site-name-slogan .slogan {
+    color: #202020;
+    font-size: 12px;
+    position: relative;
+    left: 1px;
+  }
+
+  #siteNameBox {
+    flex: 1 1 auto;
+  }
+
+  #siteName {
+    font-size: 125%;
+  }
+  
+  .version-info {
+  }
+
+  .version-info a:hover {
+    text-decoration: underline !important;
+  }
+
+
+  
+
+ /* Header toolbar positioning and styles */
+.header-right {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+  }
+  
+  .header-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    background: transparent;
+    box-shadow: none;
+  }
+  
+  .help-icon {
+    font-size: 24px;
+    color: #000;
+    transition: color 0.3s ease;
+  }
+  
+  .help-icon:hover {
+    color: #1976D2; /* Change icon color on hover */
+  }
+  
+  /* Responsive text size */
+  .responsive-text {
+    font-size: 2vw; /* Adjust to viewport width */
+  }
+  
+  /* Menu styles */
+  .menu-container {
+    min-width: 200px;
+  }
+  
+  .menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  
+  .menu-text {
+    margin-left: 8px;
+    white-space: nowrap;
+    flex-grow: 1;
+  }
+  
+  /* Hover and active states */
+  .custom-menu .mat-menu-item:hover {
+    background-color: #1976D2 !important;
+    color: white;
+  }
+  
+  .custom-menu .mat-menu-item:active {
+    background-color: #004ba0 !important; /* Darker blue for active state */
+  }
+  
+  .custom-menu .mat-menu-item {
+    background-color: white;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  

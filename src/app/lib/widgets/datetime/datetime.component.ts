@@ -11,6 +11,10 @@ import {
 } from '@ng-bootstrap/ng-bootstrap';
 import {DateComponent} from '../date/date.component';
 import {DateUtil, DateTime} from '../../date-util';
+import { faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
+
+
+
 
 interface ConfigureDateTime {
   setDateTime(dateTime: DateTime);
@@ -131,6 +135,8 @@ export class DatetimeComponent extends DateComponent implements OnInit {
   @ViewChild('d', {read: NgbInputDatepicker}) dp: NgbInputDatepicker;
 
   calendar = inject(NgbCalendar);
+  calendarAlt = faCalendarAlt;
+
   constructor(private dateAdapter: NgbDateAdapter<string>,
               private parserFormatter: NgbDateParserFormatter,
               private timeAdapter: NgbTimeAdapter<NgbTimeStruct>) {

@@ -36,6 +36,10 @@ export class LfbControlWidgetComponent extends ControlWidget implements OnInit {
   @Input()
   booleanControlledInitial = true;
 
+  get isRequired() {
+    return this.formProperty.schema.required.includes(this.formProperty.rootName);
+  }
+
   ngOnInit() {
     const widget = this.formProperty.schema.widget;
     // Input is priority followed by widget definition and default

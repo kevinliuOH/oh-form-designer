@@ -40,6 +40,13 @@ import {TextAreaComponent} from './widgets/textarea/textarea.component';
 import {DatetimeComponent} from './widgets/datetime/datetime.component';
 import {EditableLinkIdComponent} from './widgets/editable-link-id/editable-link-id.component';
 import {HelpTextComponent} from "./widgets/help-text/help-text.component";
+import { StringWithXHTMLComponent } from "./widgets/string-with-xhtml/string-with-xhtml.component";
+import { LinkIdComponent } from "./widgets/link-id/link-id.component";
+import { DateFormatExtensionComponent } from './widgets/date-format-extension/date-format-extension.component';
+import { LaunchContextComponent } from "./widgets/launch-context/launch-context.component";
+import { ExpressionExtensionComponent } from "./widgets/initial-expression/expression-extension.component";
+import { AttachmentsCheckboxGroupComponent } from './widgets/attachments-checkbox-group/attachments-checkbox-group.component';
+import { AttachmentFileSizeComponent } from './widgets/attachment-file-size/attachment-file-size.component';
 
 
 @Injectable()
@@ -75,6 +82,7 @@ export class LformsWidgetRegistry extends DefaultWidgetRegistry {
     this.register('item-control', ItemControlComponent);
     this.register('help-text', HelpTextComponent);
     this.register('string-with-css', StringWithCssComponent);
+    this.register('string-with-xhtml', StringWithXHTMLComponent);
     this.register('restrictions', RestrictionsComponent);
     this.register('restrictions-operator', RestrictionsOperatorComponent);
     this.register('observation-link-period', ObservationLinkPeriodComponent);
@@ -82,6 +90,11 @@ export class LformsWidgetRegistry extends DefaultWidgetRegistry {
     this.register('quantity-unit', QuantityUnitComponent);
     this.register('terminology-server', TerminologyServerComponent);
     this.register('editable-link-id', EditableLinkIdComponent);
-
+    this.register('link-id', LinkIdComponent);
+    this.register('date-format-extension', DateFormatExtensionComponent);
+    this.register('launch-context', LaunchContextComponent);
+    this.register('expression-extension', ExpressionExtensionComponent);
+    this.register('attachment-checkbox-group', AttachmentsCheckboxGroupComponent);
+    this.register('attachment-file-size', AttachmentFileSizeComponent);
   }
 }

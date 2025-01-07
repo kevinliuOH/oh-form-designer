@@ -16,15 +16,21 @@
     "advanced": [
       {
         "showFields": [
+          { "field": "__$jurisdictionYesNo", "col":  12},
+          { "field": "jurisdiction", "col":  12},
+          { "field": "__$launchContextYesNo", "col":  12},
+          { "field": "__$launchContext", "col":  12},
+          { "field": "__$itemExtractionContext", "col":  12},
           { "field": "__$terminologyServer", "col": 12},
-          { field:  "implicitRules", col:  12},
-          { field:  "version", col:  12},
-          { field:  "name", col:  12},
-          { field:  "date", col:  12},
-          { field:  "publisher", col:  12},
-          { field:  "copyright", col:  12},
-          { field:  "approvalDate", col:  12},
-          { field:  "lastReviewDate", col:  12}
+          { "field":  "implicitRules", "col":  12},
+          { "field":  "version", "col":  12},
+          { "field":  "name", "col":  12},
+          { "field":  "date", "col":  12},
+          { "field":  "publisher", "col":  12},
+          { "field":  "copyright", "col":  12},
+          { "field":  "approvalDate", "col":  12},
+          { "field":  "lastReviewDate", "col":  12},
+          { "field":  "effectivePeriod", "col":  12}
         ]
       }
     ],
@@ -32,7 +38,7 @@
   },
   overridePropertyLabels: {
     '/properties/name': 'Questionnaire name',
-    '/properties/date': 'Revision date',
+    '/properties/date': 'Revision date'
   },
   // Specify widget layout.
   // id is widget schema registry defined in lforms-widget-registry.ts
@@ -54,6 +60,13 @@
       id: "date",
       labelPosition: "left",
       labelClasses: "col-sm-2 m-0 ps-0 pe-1",
+      controlClasses: "col-sm-3",
+      placeholder: 'yyyy-MM-dd'
+    },
+    effectPeriodInputDate: {
+      id: "date",
+      labelPosition: "left",
+      labelClasses: "col-sm-2 m-0 p-1",
       controlClasses: "col-sm-3",
       placeholder: 'yyyy-MM-dd'
     },
@@ -85,6 +98,7 @@
       '/properties/publisher',
       '/properties/description',
       '/properties/purpose',
+      '/properties/id'
     ],
     textArea: [
       '/properties/copyright',
@@ -92,6 +106,10 @@
     inputDate: [
       '/properties/approvalDate',
       '/properties/lastReviewDate'
+    ],
+    effectPeriodInputDate:[
+       '/properties/effectivePeriod/properties/start',
+      '/properties/effectivePeriod/properties/end'
     ],
     inputDateTime: [
       '/properties/date'

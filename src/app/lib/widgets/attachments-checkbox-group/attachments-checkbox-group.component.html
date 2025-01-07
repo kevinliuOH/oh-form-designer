@@ -1,0 +1,27 @@
+  <div class="widget" [ngClass]="{'row': labelPosition === 'left', 'm-0' : true}">
+    <lfb-label *ngIf="!nolabel"
+    [for]="id"
+    [title]="schema.title"
+    [helpMessage]="schema.description"
+    [ngClass]="labelClasses"
+  ></lfb-label>
+    <div [ngClass]="controlClasses">
+      <div *ngFor="let option of options; let i = index" class="form-check form-check-inline">
+        <input
+          type="checkbox"
+          class="form-check-input"
+          [id]="id + '-' + i"
+          [value]="option.value"
+          [checked]="isSelected(option.value)"
+          (change)="onCheckboxChange($event, option.value)"
+        />
+        <label class="form-check-label no-bold" [attr.for]="id + '-' + i">
+          {{ option.label }}
+        </label>
+      </div>
+    </div>
+    <!-- Validation Message -->
+    <div *ngIf="validationError" class="text-danger">
+      {{ validationError }}
+    </div>
+  </div>

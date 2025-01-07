@@ -1,0 +1,60 @@
+<div class="help-container">
+    <h1 class="fw-bold text-start">Help Center</h1>
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+      <button class="text-decoration-underline" mat-button color="primary" (click)="toggleAllPanels()">
+        {{expandedAll ? 'Collapse All' : 'Expand All'}}
+      </button>
+    </div>
+    
+    <mat-accordion [multi]="true">
+      <!-- Introduction Section -->
+      <mat-expansion-panel [expanded]="expandedAll">
+        <mat-expansion-panel-header>
+          <mat-panel-title>Introduction</mat-panel-title>
+        </mat-expansion-panel-header>
+        <p style="text-align: justify;">The eForms Designer Tool is part of Ontario Health's (OH) "Patients Before Paperwork" (PB4P) initiative. 
+          This tool facilitates the creation, publishing, and management of clinical and administrative form templates, in line with HL7 FHIR® SDC standards, with the goal of reducing administrative burdens and improving healthcare efficiency.</p>
+        <p style="text-align: justify;">Designed for authorized users, including Builders and Approvers, the eForms Designer allows for the development and publishing of form templates in JSON format. It ensures data security and compliance with Ontario’s privacy regulations, operating within non-PHI environments to safeguard sensitive information.</p>
+      </mat-expansion-panel>
+  
+      <!-- Getting Started -->
+      <mat-expansion-panel [expanded]="expandedAll">
+        <mat-expansion-panel-header>
+          <mat-panel-title>Getting Started</mat-panel-title>
+        </mat-expansion-panel-header>
+        <p style="text-align: justify;">To use the eForms Designer Tool, you will need an Office 365 account. To request access, please email <a href="mailto:eformsdesigner@ontariohealth.ca">eformsdesigner&#64;ontariohealth.ca</a>, specifying whether you are requesting Builder or Approver access.</p>
+      </mat-expansion-panel>
+  
+      <!-- Setting Up eForms Designer -->
+      <mat-expansion-panel [expanded]="expandedAll">
+        <mat-expansion-panel-header>
+          <mat-panel-title>Setting Up eForms Designer</mat-panel-title>
+        </mat-expansion-panel-header>
+        <p style="text-align: justify;">Before you can use the eForms Designer Tool, ensure that your Office 365 account is set up. Once your access request is approved, you will be granted the necessary permissions to start using the too.</p>
+      </mat-expansion-panel>
+      <!-- Setting Up User Guide -->
+      <mat-expansion-panel [expanded]="expandedAll">
+        <mat-expansion-panel-header>
+          <mat-panel-title>User Guide</mat-panel-title>
+        </mat-expansion-panel-header>
+        <p style="text-align: justify;">Click the following link <a href="https://ontariohealth.sharepoint.com/:b:/r/sites/eFormBuilder/Shared%20Documents/OH%20eForms%20Designer%20User%20Guide%20v1.0.pdf?csf=1&web=1&e=MnL75C" 
+          target="_blank" rel="noopener noreferrer">User Guide</a> to open a guide which includes step-by-step instructions to help you navigate the eForms Designer application
+        </p>
+        </mat-expansion-panel>
+      <!-- More Sections -->
+      <mat-expansion-panel [expanded]="expandedAll">
+        <mat-expansion-panel-header>
+          <mat-panel-title>Technical Support</mat-panel-title>
+        </mat-expansion-panel-header>
+        <p>For assistance with the following issues or inquiries, please contact: <a href="mailto:eformsdesigner@ontariohealth.ca">eformsdesigner&#64;ontariohealth.ca</a> </p>
+         
+        <ul>
+          <li>New account requests</li>
+          <li>Registration issues</li>
+          <li>Username, password, or other login problems</li>
+          <li>Application-related issues</li>
+        </ul>
+      </mat-expansion-panel>
+    </mat-accordion>
+  </div>
+  

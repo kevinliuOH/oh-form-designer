@@ -2,7 +2,7 @@ import {AfterViewInit, Component, ElementRef, inject, Injectable, ViewChild} fro
 import {NgbCalendar, NgbDateAdapter, NgbDateParserFormatter, NgbDateStruct} from '@ng-bootstrap/ng-bootstrap';
 import {StringComponent} from '../string/string.component';
 import {DateUtil} from '../../date-util';
-import {faCalendar} from '@fortawesome/free-solid-svg-icons';
+import { faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 
 @Injectable()
 export class LfbDateAdapter extends NgbDateAdapter<string> {
@@ -47,7 +47,7 @@ export class LfbDateParserFormatter extends NgbDateParserFormatter {
 })
 export class DateComponent extends StringComponent implements AfterViewInit {
   static id = 0;
-  dateIcon = faCalendar;
+  calendarAlt = faCalendarAlt;
 
   @ViewChild('d', {read: ElementRef}) inputEl: ElementRef;
 

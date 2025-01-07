@@ -1,8 +1,10 @@
 import {Component, ElementRef, Inject, OnDestroy, OnInit, ViewChild, ViewEncapsulation} from '@angular/core';
-import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
+import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog';
 import fhir from 'fhir/r4';
 import {FHIRServer, FhirService} from '../../../services/fhir.service';
 import {FormService} from '../../../services/form.service';
+import { FormItem, StorageService } from "../../../services/storage.service";
+import { StatusEnum } from "../../../form-list/form-list.component";
 import {FHIR_VERSIONS, FHIR_VERSION_TYPE, Util} from "../../util";
 import {fhirPrimitives} from "../../../fhir";
 import {CodemirrorComponent} from "@ctrl/ngx-codemirror";
@@ -16,14 +18,25 @@ import {
 import {debounceTime, distinctUntilChanged, filter, map} from "rxjs/operators";
 import {NgbAccordionItem, NgbTypeahead} from "@ng-bootstrap/ng-bootstrap";
 import {faCopy} from '@fortawesome/free-regular-svg-icons';
+import { ToasterService } from "../../../services/toaster.service";
+import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { Roles } from "../../constants";
+import patient from '../../../../assets/resources/patient.json';
+import practitioner from '../../../../assets/resources/practitioner.json';
+import organization from '../../../../assets/resources/organization.json';
+
 declare var LForms: any;
 
 /**
  * Define data structure for dialog
  */
 export interface PreviewData {
+  roles?: Roles[];
   questionnaire: fhir.Questionnaire;
   lfData?: any;
+  formItem?: FormItem;
+  onPublish: () => {};
+  onSave: () => {};
 }
 
 @Component({
@@ -33,7 +46,7 @@ export interface PreviewData {
   styleUrls: ['./preview-dlg.component.css']
 })
 export class PreviewDlgComponent implements OnInit, OnDestroy {
-
+  protected readonly StatusEnum = StatusEnum;
   @ViewChild('lhcForm', {read: ElementRef}) wcForm: ElementRef;
   @ViewChild('dlgContent', {static: false, read: ElementRef}) dlgContent: ElementRef;
   format: FHIR_VERSION_TYPE = 'R4';
@@ -53,6 +66,12 @@ export class PreviewDlgComponent implements OnInit, OnDestroy {
   focus$ = new Subject<string>();
   click$ = new Subject<string>();
 
+  get isApprover() {
+    return this.data?.roles?.includes(Roles.APPROVER);
+  }
+  get isBuilder() {
+    return this.data?.roles?.includes(Roles.BUILDER);
+  }
   /**
    * Search function for url input.
    * @param text$ - Observable of text from user input.
@@ -91,10 +110,19 @@ export class PreviewDlgComponent implements OnInit, OnDestroy {
   constructor(
     public formService: FormService,
     private fhirService: FhirService,
+    private storageService: StorageService,
     public dialogRef: MatDialogRef<PreviewDlgComponent>,
+    private matDlg: MatDialog,
+    private toasterService: ToasterService,
+    private modalService: NgbModal,
     @Inject(MAT_DIALOG_DATA) public data: PreviewData,
   ) {
-    LForms.Util.setFHIRContext(this.fhirService.getSmartClient());
+    const fhirContext = this.fhirService.getSmartClient();
+
+    LForms.Util.setFHIRContext(fhirContext, {
+      patient: patient,
+      user:  practitioner
+    });
   }
 
   ngOnInit() {
@@ -198,4 +226,12 @@ export class PreviewDlgComponent implements OnInit, OnDestroy {
   }
 
   protected readonly faCopy = faCopy;
+
+  async save() {
+    this.data.onSave();
+  }
+
+  async publish() {
+    this.data.onPublish();
+  }
 }

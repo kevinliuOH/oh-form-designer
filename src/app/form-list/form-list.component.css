@@ -1,0 +1,27 @@
+.content {
+  padding: 0.5rem;
+}
+
+.ml-2 {
+  margin-left: 15px;
+}
+.mr-2 {
+  margin-left: 15px;
+}
+.ml-1 {
+  margin-left: 10px;
+  /* margin-top: 5px; */
+}
+.clickable {
+  cursor: pointer;
+}
+
+.mat-mdc-header-row, .mat-mdc-row {
+  height: 2rem;
+}
+
+.custom-icon {
+  font-size: 17px; /* Adjust to your desired size */
+  width: 20px; 
+  height: 14px;
+}

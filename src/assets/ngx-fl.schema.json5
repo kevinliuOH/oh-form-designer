@@ -16,6 +16,7 @@
       "title": "Id",
       "pattern": "^[A-Za-z0-9\\-\\.]{1,64}$",
       "type": "string",
+      "readOnly": true,
       "widget": {"id": "hidden"}
     },
     "meta": {
@@ -265,7 +266,8 @@
       "description": "An absolute URI that is used to identify this questionnaire when it is referenced in a specification, model, design or an instance; also called its canonical identifier. This SHOULD be globally unique and SHOULD be a literal address at which at which an authoritative instance of this questionnaire is (or will be) published. This URL can be the target of a canonical reference. It SHALL remain the same when the questionnaire is stored on different servers.",
       "title": "URL",
       "type": "string",
-      "pattern": "^\\S*$"
+      "pattern": "^\\S*$",
+      "readOnly": true
     },
     "identifier": {
       "description": "A formal identifier that is used to identify this questionnaire when it is represented in other formats, or referenced in a specification, model, design or an instance.",
@@ -472,7 +474,8 @@
       "description": "The identifier that is used to identify this version of the questionnaire when it is referenced in a specification, model, design or instance. This is an arbitrary value managed by the questionnaire author and is not expected to be globally unique. For example, it might be a timestamp (e.g. yyyymmdd) if a managed version is not available. There is also no expectation that versions can be placed in a lexicographical sequence.",
       "title": "Version",
       "pattern": "^[ \\r\\n\\t\\S]+$",
-      "type": "string"
+      "type": "string",
+      "readOnly": true
     },
     "name": {
       "description": "A natural language name identifying the questionnaire. This name should be usable as an identifier for the module by machine processing applications such as code generation.",
@@ -500,12 +503,11 @@
       "description": "The status of this questionnaire. Enables tracking the life-cycle of the content.",
       "enum": [
         "draft",
-        "active",
-        "retired",
-        "unknown"
+        "active"
       ],
       "type": "string",
       "title": "Status",
+      "readOnly": true,
       "widget": {
         "id": "lb-radio",
         "layout": "row",
@@ -533,7 +535,8 @@
       "description": "The date  (and optionally time) when the questionnaire was published. The date must change when the business version changes and it must change if the status code changes. In addition, it should change when the substantive content of the questionnaire changes.",
       "title": "Date",
       "pattern": "^([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)(-(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1])(T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\\.[0-9]+)?(Z|(\\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00)))?)?)?$",
-      "type": "string"
+      "type": "string",
+      "readOnly": true
     },
     "publisher": {
       "description": "The name of the organization or individual that published the questionnaire.",
@@ -1053,6 +1056,27 @@
       "type": "array",
       "title": "Use context"
     },
+    "__$jurisdictionYesNo": {
+      "description": "A legal or geographic region in which the questionnaire is intended to be used.",
+      "default": false,
+      "type": "boolean",
+      "title": "Jurisdiction",
+      "widget": {
+        "id": "boolean-radio",
+        "optionLabels": [
+          [
+            false,
+            "No jurisdiction"
+          ],
+          [
+            true,
+            "Include jurisdiction"
+          ]
+        ],
+        "labelClasses": "col-2 ps-0 pe-1",
+        "controlClasses": "col-auto btn-group btn-group-sm ps-0"
+      }
+    },
     "jurisdiction": {
       "description": "A legal or geographic region in which the questionnaire is intended to be used.",
       "items": {
@@ -1060,7 +1084,8 @@
           "id": {
             "description": "Unique id for the element within a resource (for internal references). This may be any string value that does not contain spaces.",
             "pattern": "^[ \\r\\n\\t\\S]+$",
-            "type": "string"
+            "type": "string",
+            "widget": { "id": "hidden"}
           },
           "extension": {
             "description": "May be used to represent additional information that is not part of the basic definition of the element. To make the use of extensions safe and manageable, there is a strict set of governance  applied to the definition and use of extensions. Though any implementer can define an extension, there is a set of requirements that SHALL be met as part of the definition of the extension.",
@@ -1098,7 +1123,9 @@
                 "system": {
                   "description": "The identification of the code system that defines the meaning of the symbol in the code.",
                   "pattern": "^\\S*$",
-                  "type": "string"
+                  "type": "string",
+                  "default": "http://ontariohealth.ca/fhir/CodeSystem/ontario-regions",
+                  "readOnly": true
                 },
                 "version": {
                   "description": "The version of the code system which was used when choosing this code. Note that a well-maintained code system does not need the version reported, because the meaning of codes is consistent across versions. However this cannot consistently be assured, and when the meaning is not guaranteed to be consistent, the version SHOULD be exchanged.",
@@ -1111,35 +1138,87 @@
                 "code": {
                   "description": "A symbol in syntax defined by the system. The symbol may be a predefined code or an expression in a syntax defined by the coding system (e.g. post-coordination).",
                   "pattern": "^[^\\s]+(\\s[^\\s]+)*$",
-                  "type": "string"
+                  "type": "string",
+                  "enum": [
+                    "ca-on",
+                    "west",
+                    "central",
+                    "toronto",
+                    "east",
+                    "northeast",
+                    "northwest"
+                  ],
+                  "default": "ca-on",
+                  "widget": {
+                    "id": "select",
+                    "controlClasses": "p-0",
+                  }
                 },
                 "display": {
                   "description": "A representation of the meaning of the code in the system, following the rules of the system.",
                   "pattern": "^[ \\r\\n\\t\\S]+$",
-                  "type": "string"
+                  "type": "string",
+                  "widget": {
+                    "id": "hidden"
+                  }
                 },
                 "userSelected": {
                   "description": "Indicates that this coding was chosen by a user directly - e.g. off a pick list of available items (codes or displays).",
                   "pattern": "^true|false$",
-                  "type": "boolean"
+                  "type": "boolean",
+                  "widget": {
+                    "id": "hidden"
+                  }
                 }
               },
               "additionalProperties": false,
               "type": "object"
             },
-            "type": "array"
+            "type": "array",
+            "widget": {
+              "id": "table",
+              "noTableLabel": true,
+              "labelPosition": "left",
+              "labelClasses": "col-sm-1",
+              "controlClasses": "col-sm-11",
+              "addButtonLabel": "Add new code",
+              "booleanControlledOption": false,
+              "booleanControlled": false,
+              "showFields": [
+                {"field": "code", "col": 3, "nolabel": true},
+                {"field": "system", "col": 8, "nolabel": true}
+              ]
+            }
           },
           "text": {
             "description": "A human language representation of the concept as seen/selected/uttered by the user who entered the data and/or which represents the intended meaning of the user.",
             "pattern": "^[ \\r\\n\\t\\S]+$",
-            "type": "string"
-          }
+            "type": "string",
+            "default": "Region"
+          },
         },
         "additionalProperties": false,
-        "type": "object"
+        "type": "object",
       },
       "type": "array",
-      "title": "Jurisdiction"
+      "title": "Jurisdiction",
+      "visibleIf": {
+        "__$jurisdictionYesNo": [true]
+      },
+      "widget": {
+        "id": "table",
+        "noTableLabel": true,
+        "labelPosition": "left",
+        "labelClasses": "col-sm-2",
+        "controlClasses": "col-sm-10",
+        "addButtonLabel": "Add new Jurisdiction",
+        "booleanControlledOption": false,
+        "booleanControlled": false,
+        "showFields": [
+          {"field": "text", "col": 3, "nolabel": true},
+          {"field": "coding", "col": 8, "nolabel": true}
+        ]
+      }
     },
     "purpose": {
       "description": "Explanation of why this questionnaire is needed and why it has been designed as it has.",
@@ -1157,7 +1236,8 @@
       "description": "The date on which the resource content was approved by the publisher. Approval happens once when the content is officially approved for usage.",
       "title": "Approval date",
       "pattern": "^([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)(-(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1]))?)?$",
-      "type": "string"
+      "type": "string",
+      "readOnly": true
     },
     "lastReviewDate": {
       "description": "The date on which the resource content was last reviewed. Review happens periodically after approval but does not change the original approval date.",
@@ -1172,7 +1252,10 @@
         "id": {
           "description": "Unique id for the element within a resource (for internal references). This may be any string value that does not contain spaces.",
           "pattern": "^[ \\r\\n\\t\\S]+$",
-          "type": "string"
+          "type": "string",
+          "widget": {
+            "id": "hidden"
+          }
         },
         "extension": {
           "description": "May be used to represent additional information that is not part of the basic definition of the element. To make the use of extensions safe and manageable, there is a strict set of governance  applied to the definition and use of extensions. Though any implementer can define an extension, there is a set of requirements that SHALL be met as part of the definition of the extension.",
@@ -1185,18 +1268,26 @@
           }
         },
         "start": {
-          "description": "The start of the period. The boundary is inclusive.",
-          "pattern": "^([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)(-(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1])(T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\\.[0-9]+)?(Z|(\\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00)))?)?)?$",
-          "type": "string"
+          "title": "Effective Start Date",
+          "description": "The start of the period associated to this template. The boundary is inclusive.",
+          "pattern": "^([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)(-(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1]))?)?$",
+          "type": "string",
+          "widget": {
+            "id": "date"
+          }
         },
         "end": {
-          "description": "The end of the period. If the end of the period is missing, it means no end was known or planned at the time the instance was created. The start may be in the past, and the end date in the future, which means that period is expected/planned to end at that time.",
-          "pattern": "^([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)(-(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1])(T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\\.[0-9]+)?(Z|(\\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00)))?)?)?$",
-          "type": "string"
+          "title": "Effective End Date",
+          "description": "The end of the period associated to this template.  If the end of the period is missing, it means that the period is ongoing.",
+          "pattern": "^([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)(-(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1]))?)?$",
+          "type": "string",
+          "widget": {
+            "id": "date"
+          }
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
     },
     "__$codeYesNo": {
       "description": "An identifier for this question or group of questions in a particular terminology such as LOINC.",
@@ -1296,11 +1387,149 @@
       "description": "Enter url for preferred terminology server.",
       "title": "Terminology server",
       "type": "string"
+    },
+    "__$launchContextYesNo": {
+      "description": "Provide context for form processing logic i.e. pre-population",
+      "default": false,
+      "type": "boolean",
+      "title": "Launch Context",
+      "widget": {
+        "id": "boolean-radio",
+        "optionLabels": [
+          [
+            false,
+            "No launch context"
+          ],
+          [
+            true,
+            "Include launch context"
+          ]
+        ],
+        "labelClasses": "col-2 ps-0 pe-1",
+        "controlClasses": "col-auto btn-group btn-group-sm ps-0"
+      }
+    },
+    "__$launchContext": {
+      "description": "Provide context for form processing logic i.e. pre-population.",
+      "items": {
+        "properties": {
+          "name": {
+            "description": "The variable name the passed resource will be referenced by within the Questionnaire logic",
+            "properties": {
+              "system": {
+                "description": "The identification of the code system that defines the meaning of the symbol in the code.",
+                "pattern": "^\\S*$",
+                "type": "string",
+                "default": "http://hl7.org/fhir/uv/sdc/CodeSystem/launchContext",
+                "widget": {
+                  "id": "hidden"
+                }
+              },
+              "code": {
+                "description": "A symbol in syntax defined by the system. The symbol may be a predefined code or an expression in a syntax defined by the coding system (e.g. post-coordination).",
+                "pattern": "^[^\\s]+(\\s[^\\s]+)*$",
+                "type": "string",
+                "enum": [
+                  "patient",
+                  "encounter",
+                  "location",
+                  "user",
+                  "study"
+                ],
+                "widget": {
+                  "id": "select"
+                }
+              },
+              "display": {
+                "description": "A representation of the meaning of the code in the system, following the rules of the system.",
+                "pattern": "^[ \\r\\n\\t\\S]+$",
+                "type": "string",
+                "widget": {
+                  "id": "hidden"
+                }
+              }
+            },
+            "additionalProperties": false,
+            "type": "object"
+          },
+          "type": {
+            "description": "The kind of resource to be provided",
+            "pattern": "^\\S*$",
+            "type": "string"
+          },
+          "description": {
+            "description": "A representation of the meaning of the code in the system, following the rules of the system.",
+            "pattern": "^[ \\r\\n\\t\\S]+$",
+            "type": "string"
+          },
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "widget": {"id": "hidden"},
+      },
+      "type": "array",
+      "title": "Launch Context",
+      "visibleIf": {
+        "__$launchContextYesNo": [true]
+      },
+      "widget": {
+        "id": "launch-context",
+        "noTableLabel": true,
+        "labelPosition": "left",
+        "labelClasses": "col-sm-2",
+        "controlClasses": "col-sm-10",
+        "addButtonLabel": "Add new context",
+        "booleanControlledOption": false,
+        "booleanControlled": false,
+        "showFields": [
+          {"field": "name.code", "title": "Code", "col": 3, "nolabel": true},
+          {"field": "type", "col": 3, "nolabel": true},
+          {"field": "description", "col": 3, "nolabel": true}
+        ]
+      }
+    },
+    "__$itemExtractionContext": {
+      "description": "Specifies a query or other expression that identifies the resource (or set of resources for a repeating item) to be extracted from this item once the QuestionnaireResponse is complete.",
+      "properties": {
+        "language": {
+          "description": "text/cql | text/fhirpath | application/x-fhir-query | etc",
+          "title": "Language",
+          "enum": [
+            "text/fhirpath",
+            "application/x-fhir-query",
+            "text/cql"
+          ],
+          "type": "string",
+          "widget": {
+            "id": "select"
+          }
+        },
+        "expression": {
+          "description": "The Expression structure defines an expression that generates a value. The expression is provided in a specifed language (by mime type)\n\nThe context of use of the expression must specify the context in which the expression is evaluated, and how the result of the expression is used.",
+          "title": "Expression",
+          "type": "string"
+        }
+      },
+      "visibleIf": {
+        "__$launchContextYesNo": [true]
+      },
+      "title": "Item extraction context",
+      "additionalProperties": false,
+      "type": "object",
+      "widget": {
+        "id": "expression-extension",
+        "url": "http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-itemExtractionContext",
+        "labelPosition": "left",
+        "labelClasses": "col-2 ps-0 pe-1",
+        "controlClasses": "col p-0 m-auto ms-0"
+      }
     }
   },
   "additionalProperties": true,
   "required": [
-    "resourceType"
+    "resourceType",
+    "url",
+    "publisher"
   ],
   "definitions": {
     // Merge field definitions from fhir-definitions.schema.json5.
@@ -1363,7 +1592,11 @@
         "modifierExtension",
         "contact",
         "useContext",
-        "jurisdiction"
+        "__$jurisdictionYesNo",
+        "jurisdiction",
+        "__$launchContextYesNo",
+        "__$launchContext",
+        "__$itemExtractionContext"
       ]
     }
   ],

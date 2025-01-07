@@ -1,12 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import {MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
-
+import appVersion from '../../assets/version.json';
 @Component({
   selector: 'lfb-footer',
   template: `
     <div role="contentinfo" id="fine-print">
-      <ul class="horz-list">
+      <div class="app-release">
+          <span *ngIf="appVersion">Release: {{appVersion}}</span>
+      </div>
+      <ul class="horz-list" style="display:none;">
         <li><a title="NLM copyright information"
                href="http://www.nlm.nih.gov/copyright.html">Copyright</a></li>
         <li><a title="NLM privacy policy"
@@ -19,7 +22,7 @@ import {DomSanitizer} from '@angular/platform-browser';
         <li class="last-item"><a href="https://lhncbc.nlm.nih.gov/contact-us"
         >Contact Us</a></li>
       </ul>
-      <ul class="horz-list">
+      <ul class="horz-list" style="display:none;">
         <li><a title="U.S. National Library of Medicine"
                href="http://www.nlm.nih.gov/"
         >U.S. National Library of Medicine</a></li>
@@ -64,14 +67,26 @@ import {DomSanitizer} from '@angular/platform-browser';
       vertical-align: bottom;
       width: 60px;
     }
+    .app-release {
+      width: 100%;
+      text-align: left;
+      margin-bottom: 5px;
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
   `]
 })
-export class FooterComponent {
-
+export class FooterComponent implements OnInit{
+  appVersion: string;
   constructor(private iconRegistry: MatIconRegistry,
               private sanitizer: DomSanitizer) {
     // Initialize icon registry
     this.iconRegistry.addSvgIcon('USAgov',
       this.sanitizer.bypassSecurityTrustResourceUrl('../../assets/images/USAgov.svg'));
+  }
+  ngOnInit(): void {
+    if(appVersion?.version) {
+      this.appVersion = appVersion.version;
+    }
   }
 }

@@ -24,8 +24,10 @@
                (keyup)="handleInput()"
                (blur)="suppressInvalidDate($event)"
         >
-        <button class="btn btn-outline-secondary py-0" [attr.aria-label]="'Date time picker for '+schema.title"
-                (click)="d.toggle()"><fa-icon [icon]="dateIcon" aria-hidden="true"></fa-icon></button>
+        <button class="btn btn-outline-secondary py-0" [disabled]="schema.readOnly" [attr.aria-label]="'Date time picker for '+schema.title"
+                (click)="d.toggle()">
+                <fa-icon [icon]="calendarAlt"></fa-icon>
+              </button>
       </div>
 
       <ng-container *ngFor="let error of errors ? Array.from(errors).reverse() : null">

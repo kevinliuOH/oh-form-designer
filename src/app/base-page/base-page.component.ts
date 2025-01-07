@@ -1,42 +1,57 @@
-import {
-  Component,
-  ElementRef,
-  EventEmitter,
-  Input,
-  OnInit,
-  Output,
-  TemplateRef,
-  ViewChild
-} from '@angular/core';
-import {FormService} from '../services/form.service';
+import { Component, ElementRef, EventEmitter, Input, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
+import { FormService } from '../services/form.service';
 import fhir from 'fhir/r4';
-import {from, Observable, of, Subject} from 'rxjs';
-import {catchError, debounceTime, distinctUntilChanged, finalize, switchMap, takeUntil} from 'rxjs/operators';
-import {MessageType} from '../lib/widgets/message-dlg/message-dlg.component';
-import {NgbActiveModal, NgbModal} from '@ng-bootstrap/ng-bootstrap';
-import {AutoCompleteResult} from '../lib/widgets/auto-complete/auto-complete.component';
-import {FetchService} from '../services/fetch.service';
-import {FhirService} from '../services/fhir.service';
-import {FhirServersDlgComponent} from '../lib/widgets/fhir-servers-dlg/fhir-servers-dlg.component';
-import {FhirSearchDlgComponent} from '../lib/widgets/fhir-search-dlg/fhir-search-dlg.component';
-import {PreviewDlgComponent} from '../lib/widgets/preview-dlg/preview-dlg.component';
-import {AppJsonPipe} from '../lib/pipes/app-json.pipe';
-import {GuidingStep, Util} from '../lib/util';
-import {MatDialog} from '@angular/material/dialog';
-import {FhirExportDlgComponent} from '../lib/widgets/fhir-export-dlg/fhir-export-dlg.component';
-import {LoincNoticeComponent} from '../lib/widgets/loinc-notice/loinc-notice.component';
-import {SharedObjectService} from '../services/shared-object.service';
-
+import { BehaviorSubject, from, Observable, of, Subject } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, finalize, switchMap, takeUntil } from 'rxjs/operators';
+import { MessageDlgComponent, MessageType } from '../lib/widgets/message-dlg/message-dlg.component';
+import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { AutoCompleteResult } from '../lib/widgets/auto-complete/auto-complete.component';
+import { FetchService } from '../services/fetch.service';
+import { FhirService } from '../services/fhir.service';
+import { FhirServersDlgComponent } from '../lib/widgets/fhir-servers-dlg/fhir-servers-dlg.component';
+import { FhirSearchDlgComponent } from '../lib/widgets/fhir-search-dlg/fhir-search-dlg.component';
+import { PreviewDlgComponent } from '../lib/widgets/preview-dlg/preview-dlg.component';
+import { AppJsonPipe } from '../lib/pipes/app-json.pipe';
+import { GuidingStep, Util } from '../lib/util';
+import { MatDialog } from '@angular/material/dialog';
+import { FhirExportDlgComponent } from '../lib/widgets/fhir-export-dlg/fhir-export-dlg.component';
+import { SharedObjectService } from '../services/shared-object.service';
+import { FormItem, FormStatus, StorageService } from "../services/storage.service";
+import { StatusEnum } from "../form-list/form-list.component";
+import { ToasterService } from "../services/toaster.service";
+import { FormModalComponent } from "../modals/form-modal/form-modal.component";
+import { ActivatedRoute, ActivatedRouteSnapshot } from "@angular/router";
+import { Roles } from "../lib/constants";
+import {
+  ExpressionCompilerFactory,
+  FormProperty,
+  FormPropertyFactory, LogService,
+  PropertyBindingRegistry,
+  SchemaValidatorFactory,
+  ValidatorRegistry
+} from "@lhncbc/ngx-schema-form";
+import { root } from "postcss";
 type ExportType = 'CREATE' | 'UPDATE';
-
+export function useFactory(schemaValidatorFactory, validatorRegistry, propertyBindingRegistry, expressionCompilerFactory, logService) {
+  return new FormPropertyFactory(schemaValidatorFactory, validatorRegistry, propertyBindingRegistry, expressionCompilerFactory, logService);
+}
 @Component({
   selector: 'lfb-base-page',
   templateUrl: './base-page.component.html',
   styleUrls: ['./base-page.component.css'],
-  providers: [NgbActiveModal]
+  providers: [
+    NgbActiveModal,
+    ValidatorRegistry,
+    PropertyBindingRegistry,
+    {
+      provide: FormPropertyFactory,
+      useFactory: useFactory,
+      deps: [SchemaValidatorFactory, ValidatorRegistry, PropertyBindingRegistry, ExpressionCompilerFactory, LogService]
+    },
+  ]
 })
 export class BasePageComponent implements OnInit {
-
+  protected readonly StatusEnum = StatusEnum;
   private unsubscribe = new Subject<void>();
   @Input()
   guidingStep: GuidingStep = 'home'; // 'choose-start', 'home', 'item-editor'
@@ -48,6 +63,7 @@ export class BasePageComponent implements OnInit {
   formSubject = new Subject<fhir.Questionnaire>();
   @Output()
   state = new EventEmitter<string>();
+  isHelpInfoDisplay: boolean = false;
   objectUrl: any;
   acResult: AutoCompleteResult = null;
   @ViewChild('fileInput') fileInputEl: ElementRef;
@@ -62,13 +78,29 @@ export class BasePageComponent implements OnInit {
   canceledEvent = false;
   titleAriaLabel;
 
+  formItem?: FormItem;
+  spinner$ = new BehaviorSubject<boolean>(false);
+  roles?: Roles[];
+
+  get isApprover() {
+    return this.roles?.includes(Roles.APPROVER);
+  }
+
+  get isBuilder() {
+    return this.roles?.includes(Roles.BUILDER);
+  }
+
   constructor(private formService: FormService,
               private modelService: SharedObjectService,
               private modalService: NgbModal,
+              private formPropertyFactory: FormPropertyFactory,
               private dataSrv: FetchService,
               public fhirService: FhirService,
+              public storageService: StorageService,
               private appJsonPipe: AppJsonPipe,
-              private matDlg: MatDialog
+              private toasterService: ToasterService,
+              private matDlg: MatDialog,
+              private route: ActivatedRoute
               ) {
     this.acResult = null;
     const isAutoSaved = this.formService.isAutoSaved();
@@ -76,19 +108,19 @@ export class BasePageComponent implements OnInit {
       this.startOption = 'from_autosave';
     }
 
-    const localStorageTerms = JSON.parse(localStorage.getItem("acceptedTermsOfUse"));
-    if (localStorageTerms) {
-      const acceptedTermsExpired = Date.now() - localStorageTerms.timestamp > this.weekInMilliseconds;
-      if (acceptedTermsExpired) {
-        localStorage.removeItem("acceptedTermsOfUse");
-      } else {
-        this.acceptedTermsOfUse = localStorageTerms.acceptedLoinc;
-        this.acceptedSnomed = localStorageTerms.acceptedSnomed;
-      }
-    } else {
-      this.acceptedTermsOfUse = sessionStorage.acceptedLoinc === 'true';
-      this.acceptedSnomed = sessionStorage.acceptedSnomed === 'true';
-    }
+    // const localStorageTerms = JSON.parse(localStorage.getItem("acceptedTermsOfUse"));
+    // if (localStorageTerms) {
+    //   const acceptedTermsExpired = Date.now() - localStorageTerms.timestamp > this.weekInMilliseconds;
+    //   if (acceptedTermsExpired) {
+    //     localStorage.removeItem("acceptedTermsOfUse");
+    //   } else {
+    //     this.acceptedTermsOfUse = localStorageTerms.acceptedLoinc;
+    //     this.acceptedSnomed = localStorageTerms.acceptedSnomed;
+    //   }
+    // } else {
+    //   this.acceptedTermsOfUse = sessionStorage.acceptedLoinc === 'true';
+    //   this.acceptedSnomed = sessionStorage.acceptedSnomed === 'true';
+    // }
     this.formService.setSnomedUser(this.acceptedSnomed);
 
     this.formSubject.asObservable().pipe(
@@ -114,34 +146,35 @@ export class BasePageComponent implements OnInit {
       // @ts-ignore
       window.basePageComponent = this;
     }
-    if(!this.acceptedTermsOfUse) {
-      this.modalService.open(
-        LoincNoticeComponent,{size: 'lg', container: 'body > lfb-root', keyboard: false, backdrop: 'static'}
-      ).result
-        .then(
-          (result) => {
-            this.acceptedTermsOfUse = result.acceptedLoinc;
-            if (result.acceptedLoinc && result.acceptedSnomed) {
-              localStorage.setItem('acceptedTermsOfUse', JSON.stringify({
-                acceptedLoinc: result.acceptedLoinc,
-                acceptedSnomed: result.acceptedSnomed,
-                timestamp: Date.now()
-              }));
-            } else {
-              sessionStorage.acceptedLoinc = result.acceptedLoinc;
-              sessionStorage.acceptedSnomed = result.acceptedSnomed;
-            }
-            this.formService.setSnomedUser(result.acceptedSnomed);
-          },
-          (reason) => {
-            console.error(reason);
-          });
-    }
+    // if(!this.acceptedTermsOfUse) {
+    //   this.modalService.open(
+    //     LoincNoticeComponent,{size: 'lg', container: 'body > lfb-root', keyboard: false, backdrop: 'static'}
+    //   ).result
+    //     .then(
+    //       (result) => {
+    //         this.acceptedTermsOfUse = result.acceptedLoinc;
+    //         if (result.acceptedLoinc && result.acceptedSnomed) {
+    //           localStorage.setItem('acceptedTermsOfUse', JSON.stringify({
+    //             acceptedLoinc: result.acceptedLoinc,
+    //             acceptedSnomed: result.acceptedSnomed,
+    //             timestamp: Date.now()
+    //           }));
+    //         } else {
+    //           sessionStorage.acceptedLoinc = result.acceptedLoinc;
+    //           sessionStorage.acceptedSnomed = result.acceptedSnomed;
+    //         }
+    //         this.formService.setSnomedUser(result.acceptedSnomed);
+    //       },
+    //       (reason) => {
+    //         console.error(reason);
+    //       });
+    // }
 
     if(window.opener) {
       this.formService.windowOpenerUrl = this.parseOpenerUrl(window.location);
     }
     this.addWindowListeners();
+    this.roles = this.route.snapshot.data?.roles;
   }
 
 
@@ -266,6 +299,13 @@ export class BasePageComponent implements OnInit {
    */
   setQuestionnaire(questionnaire) {
     this.questionnaire = questionnaire;
+    if (!questionnaire.id) {
+      this.questionnaire.id = Util.createUUID();
+    }
+    if (!this.questionnaire.url) {
+        this.questionnaire.url = `urn:uuid:${this.questionnaire.id}`;
+    }
+
     this.modelService.questionnaire = this.questionnaire;
     this.formValue = Object.assign({}, questionnaire);
     this.formFields = Object.assign({}, questionnaire);
@@ -311,6 +351,10 @@ export class BasePageComponent implements OnInit {
       state = state === 'home' ? 'fl-editor' : state;
       this.formService.setGuidingStep(state);
       this.setQuestionnaire(this.formService.autoLoadForm());
+      this.formItem = {
+        status: FormStatus.Draft,
+        questionnaire: this.questionnaire
+      };
     }
     else if (this.startOption === 'scratch') {
       this.setStep('fl-editor');
@@ -319,21 +363,8 @@ export class BasePageComponent implements OnInit {
     else if (this.importOption === 'local') {
       this.fileInputEl.nativeElement.click();
     }
-    else if (this.importOption === 'fhirServer') {
-      this.fetchFormFromFHIRServer$().subscribe((form) => {
-        if(form) {
-          this.setQuestionnaire(form);
-          this.setStep('fl-editor');
-        }
-      });
-    }
-    else if (this.importOption === 'loinc') {
-      this.modalService.open(this.loincSearchDlg).result.then((qId)=>{
-        this.dataSrv.getLoincFormData(qId).subscribe((data) => {
-          this.setQuestionnaire(data);
-          this.setStep('fl-editor');
-        });
-      }, ()=>{});
+    else if (this.importOption === 'server') {
+      this.setStep('list');
     }
   }
 
@@ -376,7 +407,12 @@ export class BasePageComponent implements OnInit {
         setTimeout(() => {
           this.setStep('fl-editor');
           try {
-            this.setQuestionnaire(this.formService.parseQuestionnaire(fileReader.result as string));
+            const questionnaire = this.formService.parseQuestionnaire(fileReader.result as string);
+            this.loadQuestionnaire({
+              name: questionnaire.title,
+              status: FormStatus.Draft,
+              questionnaire
+            });
           }
           catch (e) {
             this.showError(`${e.message}: ${selectedFile.name}`);
@@ -411,14 +447,27 @@ export class BasePageComponent implements OnInit {
     // configure lforms template options
     const lformsTemplateOptions = {
       options: {
-        allowHTML: true,
-        displayScoreWithAnswerText: false // Not show scores
-      }
+        displayScoreWithAnswerText: false, // Not show scores
+        hideTreeLine: true,
+        hideIndentation: true,
+        allowHTML: true
+      },
+      allowHTML: true
     };
-
+    this.formItem = this.formItem || {};
+    this.formItem.questionnaire = this.formValue;
     this.matDlg.open(PreviewDlgComponent,
-      {data: {questionnaire: Util.convertToQuestionnaireJSON(this.formValue), lfData: lformsTemplateOptions},
-        width: '80vw', height: '80vh'
+      {
+        data: {
+          roles: this.roles,
+          questionnaire: Util.convertToQuestionnaireJSON(this.formValue),
+          lfData: lformsTemplateOptions,
+          formItem: this.formItem,
+          onPublish: this.publish.bind(this),
+          onSave: this.save.bind(this)
+        },
+        width: '80vw',
+        height: '80vh'
       }
     );
   }
@@ -462,6 +511,14 @@ export class BasePageComponent implements OnInit {
     downloadLink.dispatchEvent(new MouseEvent('click'));
   }
 
+
+  startSpinner() {
+    setTimeout(() => this.spinner$.next(true));
+  }
+
+  stopSpinner() {
+    setTimeout(() => this.spinner$.next(false));
+  }
   /**
    * Call back to auto complete search.
    * @param term$ - Search term
@@ -519,13 +576,13 @@ export class BasePageComponent implements OnInit {
   /**
    * Close menu handler.
    */
-  close() {
+  close(currentStep: string) {
     if(this.openerUrl) {
       this.canceledEvent = false;
       window.close();
     }
     else {
-      this.setStep('home');
+      this.setStep(currentStep === 'list' ? 'home' : 'list');
       if(!this.isDefaultForm()) {
         this.startOption = 'from_autosave';
       }
@@ -686,6 +743,143 @@ export class BasePageComponent implements OnInit {
       storedQ.item = storedQ.item || [];
     }
     return Util.isDefaultForm(storedQ);
+  }
+  loadQuestionnaire(form: FormItem) {
+    this.setQuestionnaire(form.questionnaire);
+    this.formItem = form;
+    this.setStep('fl-editor');
+  }
+  async save() {
+    this.startSpinner();
+    this.formItem = this.formItem || {};
+    this.formItem.questionnaire = this.formValue;
+    try {
+      await this.storageService.save(this.formItem);
+      this.setQuestionnaire(this.formValue);
+      this.stopSpinner();
+    } catch (err) {
+      this.stopSpinner();
+      if (err !== 'ignore') {
+        this.toasterService.showMessage('Unable to update the form, please try again later', 'danger');
+      }
+      return;
+    }
+  }
+
+  private validateCode() {
+    if (!this.formValue.code || !this.formValue.code.length) {
+      return 'Forms cannot be published without Codes – please include code(s)';
+    }
+    if (this.formValue.code.some(code => !code.code || !code.system)) {
+      return 'Both Code and System fields must be populated';
+    }
+    return null;
+  }
+
+  private validatePublisher() {
+    if (!this.formValue.publisher) {
+      return 'A value must be entered in for the template’s Publisher';
+    }
+    return null;
+  }
+  private validatePublish() {
+    const messages: string[] = [];
+    messages.push(this.validateCode());
+    messages.push(this.validatePublisher());
+    const errors = messages.filter(msg => !!msg);
+    if (errors.length) {
+      const modalRef = this.modalService.open(MessageDlgComponent);
+      modalRef.componentInstance.title = 'Error';
+      modalRef.componentInstance.messages = errors;
+      modalRef.componentInstance.type = MessageType.DANGER;
+      this.setStep('fl-editor');
+      return false;
+    }
+    return true;
+  }
+  publish() {
+    if (!this.validatePublish()) {
+      return;
+    }
+
+    this.formItem = this.formItem || {};
+    this.formItem.questionnaire = this.formValue;
+
+    const modalRef = this.modalService.open(FormModalComponent);
+    modalRef.componentInstance.title = 'Confirmation';
+    modalRef.componentInstance.message = `Are you sure you wish to publish ${this.formItem.questionnaire.title}?`;
+    modalRef.componentInstance.type = MessageType.WARNING;
+    modalRef.componentInstance.confirmed = true;
+    modalRef.result.then(
+      async (result) => {
+        if (result) {
+          try {
+            this.startSpinner();
+            await this.storageService.publish(this.formItem);
+            this.toasterService.showMessage(`${this.formItem.questionnaire.title} has been published`);
+            this.stopSpinner();
+            this.setQuestionnaire(this.formItem.questionnaire);
+          } catch {
+            this.stopSpinner();
+            this.toasterService.showMessage('Unable to publish the form, please try again later', 'danger');
+          }
+        }
+      });
+  }
+
+  //Not used and incomplete, need to find a way to set rootProperty value
+  validate() {
+    const rootProperty = this.formPropertyFactory.createProperty(this.formService.getItemSchema());
+    const validators = {
+      '/enableWhen': Util.validateEnableWhenAll.bind(this),
+      '/enableWhen/*': Util.validateEnableWhenSingle.bind(this)
+    };
+    if (validators) {
+      for (const validatorId in validators) {
+        rootProperty['validatorRegistry'].register(validatorId, validators[validatorId]);
+      }
+    }
+    const errors = [];
+    this.validateItem(rootProperty, this.questionnaire.item, errors);
+    if (errors.length) {
+      const messages: string[] = errors.reduce((msgs, curr) => {
+        const details = curr.errors.map(err => err.message);
+        details.forEach(err => msgs.push(`${curr.path}: ${err}`));
+        return msgs;
+      }, []);
+      const modalRef = this.modalService.open(MessageDlgComponent);
+      modalRef.componentInstance.title = 'Error';
+      modalRef.componentInstance.message = `There are errors in items:
+          ${messages.join(';')}
+        `;
+      modalRef.componentInstance.type = MessageType.DANGER;
+      this.setStep('fl-editor');
+      return false;
+    }
+    return true;
+  }
+
+  validateItem(rootProperty: FormProperty, items: fhir.QuestionnaireItem[], errors: any[]) {
+    if (!items) {
+      return;
+    }
+    this.questionnaire.item.forEach(item => {
+      rootProperty.reset(item, false);
+      if (rootProperty._errors && rootProperty._errors.length) {
+        errors.push({
+          path: `item: Question Text: ${item.text}, Link Id: ${item.linkId}`,
+          errors: rootProperty._errors
+        });
+      }
+
+      this.validateItem(rootProperty, item.item, errors);
+    });
+  }
+
+  handleHelpInfo(isHelpInfoDisplay: boolean){
+
+    this.isHelpInfoDisplay = isHelpInfoDisplay;
+
   }
 
   /**

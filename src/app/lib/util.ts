@@ -1,19 +1,19 @@
 /**
  * A utility class
  */
-import {PropertyGroup} from '@lhncbc/ngx-schema-form/lib/model';
+import { ObjectProperty, PropertyGroup } from '@lhncbc/ngx-schema-form/lib/model';
 import traverse from 'traverse';
-import fhir from 'fhir/r4';
+import fhir, { QuestionnaireItem, QuestionnaireItemEnableWhen } from 'fhir/r4';
 import {isEqual} from 'lodash-es';
 import {ITreeNode} from '@bugsplat/angular-tree-component/lib/defs/api';
 import copy from 'fast-copy';
-import {FormProperty} from '@lhncbc/ngx-schema-form';
+import { ArrayProperty, FormProperty } from '@lhncbc/ngx-schema-form';
 import {DateUtil} from './date-util';
 import {v4 as uuidv4} from 'uuid';
 import {fhirPrimitives} from "../fhir";
 declare var LForms: any;
 
-export type GuidingStep = 'home' | 'fl-editor' | 'item-editor';
+export type GuidingStep = 'home' | 'list' | 'fl-editor' | 'item-editor';
 export enum FHIR_VERSIONS {
   R4,
   STU3
@@ -39,10 +39,22 @@ export class Util {
   };
 
   static helpItemTemplate = {
-    // text: '',  Update with value from input box.
+    text: '',  // Update with value from input box.
     type: 'display',
     linkId: '', // Update at run time.
-    extension: [Util.HELP_BUTTON_EXTENSION]
+    extension: [{
+      url: Util.ITEM_CONTROL_EXT_URL,
+      valueCodeableConcept: {
+        text: 'Help-Button',
+        coding: [
+          {
+            code: 'help',
+            display: 'Help-Button',
+            system: 'http://hl7.org/fhir/questionnaire-item-control'
+          }
+        ]
+      }
+    }]
   };
 
   private static _defaultForm = {
@@ -381,12 +393,19 @@ export class Util {
     return Object.assign(target, source);
   }
 
+  static createUUID() {
+    return uuidv4();
+  }
 
   /**
    * Create bare minimum form.
    */
   static createDefaultForm(): fhir.Questionnaire {
-    return Util.cloneDefaultForm();
+    const form = Util.cloneDefaultForm();
+    form.id = Util.createUUID();
+    form.publisher = 'Ontario Health';
+    form.url = `urn:uuid:${form.id}`;
+    return form;
   }
 
   /**
@@ -422,7 +441,7 @@ export class Util {
    */
   static findExtensionIndexByUrl(extensions: fhir.Extension [], url: string) {
     let ret = -1;
-    if(extensions?.length) {
+    if (extensions?.length) {
       ret = extensions.findIndex((ext) => {
         return ext.url === url;
       });
@@ -523,6 +542,32 @@ export class Util {
     return Util.dateValidator(value, formProperty);
   }
 
+  static endDateValidator(value: string, formProperty: FormProperty): any[] {
+    let errors: any[] = [];
+    if (value) {
+      // Accessing the parent form property (effectivePeriod)
+      const effectivePeriod = formProperty.parent; // Assuming effectivePeriod is the parent
+      // Retrieve start and end values directly
+      const startDate = effectivePeriod && effectivePeriod.properties['start'] ? effectivePeriod.properties['start'].value : null;
+      const endDate = value; // The current value being validated
+      // Perform validation logic
+      if (endDate && startDate) {
+        if (new Date(endDate) < new Date(startDate)) {
+          const errorCode = 'INVALID_DATE';
+          const err: any = {};
+          err.code = errorCode;
+          err.path = `#${formProperty.canonicalPathNotation}`;
+          err.message = 'End Date must be after the Start Date';
+          err.params = [value];
+          errors.push(err);
+          return errors; // Return error if end date is less than start date
+        }
+      }
+    }
+    return null; // Return null if validation passes
+  }
+
+
   /**
    * Traverse up the chain of tree invoking a callback for each node visited. The callback should return false to terminate the traversal.
    * @param sourceNode - The node to start the traversal.
@@ -543,6 +588,112 @@ export class Util {
     return ret;
   }
 
+  static getItemsByLinkId(items: QuestionnaireItem[], linkId: string, linkIdItems: QuestionnaireItem[]) {
+    if (!items) {
+      return;
+    }
+    items.forEach(item => {
+      if (item.linkId === linkId) {
+        linkIdItems.push(item);
+      }
+      this.getItemsByLinkId(item.item, linkId, linkIdItems);
+    });
+  }
+
+  static getItemsReferredLinkId(items: QuestionnaireItem[], linkId: string, refItems: QuestionnaireItemEnableWhen[]) {
+    if (!items) {
+      return;
+    }
+    items.forEach(item => {
+      if (item.enableWhen) {
+        refItems.push(...item.enableWhen?.filter(condition => condition.question === linkId));
+      }
+      this.getItemsReferredLinkId(item.item, linkId, refItems);
+    });
+  }
+
+  static updateReferredLinkIdItems(questionnaire: fhir.Questionnaire, oldLinkId: string, newLinkId: string) {
+    const refLinkIdItems: QuestionnaireItemEnableWhen[] = [];
+    Util.getItemsReferredLinkId(questionnaire.item, oldLinkId, refLinkIdItems);
+    refLinkIdItems?.forEach(item => item.question = newLinkId);
+  }
+
+  static validateLinkIdUniqueness(questionnaire: fhir.Questionnaire, value: string, formProperty: FormProperty): any [] {
+    const errors: any[] = [];
+    const sameLinkIdItems: QuestionnaireItem[] = [];
+
+    Util.getItemsByLinkId(questionnaire.item, value, sameLinkIdItems);
+
+    if (value?.trim().length > 0 && sameLinkIdItems.length > 1) {
+      const err = {
+        code: 'UNIQUENESS',
+        path: `#${formProperty.canonicalPathNotation}`,
+        message: 'Link Id is not unique'
+      };
+      errors.push(err);
+      return errors;
+    }
+    return null;
+  }
+
+
+  /**
+   * Custom validator for enableWhen (Array of conditions).
+   * @param value -  Value of the field.
+   * @param arrayProperty - Array form property of the field.
+   * @param rootProperty - Root form property
+   */
+  static validateEnableWhenAll (value: any, arrayProperty: ArrayProperty, rootProperty: PropertyGroup) {
+    let errors = null;
+    // iterate all properties
+    arrayProperty.forEachChild((property: ObjectProperty) => {
+      const error = Util.validateEnableWhenSingle(property.value, property, rootProperty)
+      if (error) {
+        errors = errors || []
+        errors.push(error)
+      }
+    });
+    return errors;
+  }
+
+  /**
+   * Custom validator for single condition in enableWhen
+   * @param value - Value of single enableWhen condition
+   * @param formProperty - Object form property of the condition
+   * @param rootProperty - Root form property
+   */
+  static validateEnableWhenSingle (value: any, formProperty: ObjectProperty, rootProperty: PropertyGroup) {
+    const aType = formProperty.getProperty('__$answerType').value;
+    const q = formProperty.getProperty('question');
+    const op = formProperty.getProperty('operator');
+    const aField = Util.getAnswerFieldName(aType || 'string');
+    const answerX = formProperty.getProperty(aField);
+    let errors: any[] = [];
+    if((q?.value?.trim().length > 0) && op?.value.length > 0) {
+      const aValue = answerX?.value;
+      if(answerX && (Util.isEmpty(aValue)) && op?.value !== 'exists') {
+        const errorCode = 'ENABLEWHEN_ANSWER_REQUIRED';
+        const err: any = {};
+        err.code = errorCode;
+        err.path = `#${answerX.canonicalPathNotation}`;
+        err.message = `Answer field is required when you choose an operator other than 'Not empty' or 'Empty'`;
+        const valStr = JSON.stringify(aValue);
+        err.params = [q.value, op.value, valStr];
+        errors.push(err);
+        const i = answerX._errors?.findIndex((e) => e.code === errorCode);
+        if(!(i >= 0)) { // Check if the error is already processed.
+          answerX.extendErrors(err);
+        }
+      }
+    }
+    if(errors.length) {
+      formProperty.extendErrors(errors);
+    }
+    else {
+      errors = null;
+    }
+    return errors;
+  }
   /**
    * Generates a unique identifier string using UUID v4 format.
    *

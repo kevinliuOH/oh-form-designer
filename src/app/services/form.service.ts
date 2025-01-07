@@ -11,7 +11,7 @@ import {Observable, Subject} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
 import jsonTraverse from 'traverse';
 import {JsonPointer} from 'json-ptr';
-import {loadLForms, getSupportedLFormsVersions} from 'lforms-loader';
+import {loadLForms} from '../venders/lformsLoader';
 
 // Configuration files
 // @ts-ignore
@@ -30,6 +30,7 @@ import {GuidingStep, Util} from '../lib/util';
 import {FetchService} from './fetch.service';
 import {TerminologyServerComponent} from '../lib/widgets/terminology-server/terminology-server.component';
 import {ExtensionsService} from './extensions.service';
+import { environment } from "../../environments/environment";
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 
 declare var LForms: any;
@@ -140,6 +141,9 @@ export class FormService {
       this.overrideSchemaWidgetFromLayout(obj.schema, obj.layout);
       this.overrideFieldLabelsFromLayout(obj.schema, obj.layout);
     });
+    if (!environment.feature.xhtmlExt) {
+      ngxItemSchema.properties.text.widget.id = "string-with-css";
+    }
     this.itemSchema = ngxItemSchema;
     this.flSchema = ngxFlSchema;
     this._itemEditorSchema = itemEditorSchema;
@@ -1115,15 +1119,12 @@ export class FormService {
    * @return - A promise which resolves to version number loaded.
    */
   loadLFormsLib(): Promise<string> {
-    return getSupportedLFormsVersions().then((versions) => {
-      const latestVersion = versions[0] || '34.3.0';
-      return loadLForms(latestVersion).then(() => latestVersion).catch((error) => {
-        console.error(`lforms-loader.loadLForms() failed: ${error.message}`);
-        throw new Error(error);
-      });
-    }).catch((error) => {
-      console.error(`lforms-loader.getSupportedLFormsVersions() failed: ${error.message}`);
+
+    const latestVersion = '36.5.0';
+    return loadLForms(latestVersion, undefined, undefined).then(() => latestVersion).catch((error) => {
+      console.error(`lforms-loader.loadLForms() failed: ${error.message}`);
       throw new Error(error);
     });
+
   }
 }

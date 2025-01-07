@@ -27,6 +27,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgxSchemaFormComponent } from './ngx-schema-form/ngx-schema-form.component';
 import { TreeModule } from '@bugsplat/angular-tree-component';
+import { ItemJsonEditorComponent } from './lib/widgets/item-json-editor/item-json-editor.component';
 import { GridComponent } from './lib/widgets/grid.component/grid.component';
 import { TableComponent } from './lib/widgets/table/table.component';
 import { LformsWidgetRegistry} from './lib/lforms-widget-registry';
@@ -91,6 +92,26 @@ import { EditableLinkIdComponent } from './lib/widgets/editable-link-id/editable
 import {CdkCopyToClipboard} from "@angular/cdk/clipboard";
 import {CodemirrorModule} from "@ctrl/ngx-codemirror";
 import {HelpTextComponent} from "./lib/widgets/help-text/help-text.component";
+import { FormListComponent } from "./form-list/form-list.component";
+import { MatTableModule } from "@angular/material/table";
+import { MatSortModule } from "@angular/material/sort";
+import { PaginatorComponent } from "./form-list/paginator/paginator.component";
+import { ToasterComponent } from "./form-list/toaster/toaster.component";
+import { MsalModule, MsalGuard, MsalService, MsalBroadcastService } from '@azure/msal-angular';
+import { PublicClientApplication, InteractionType } from '@azure/msal-browser';
+import { environment } from "../environments/environment";
+import { AppRoutingModule } from "./app.routing.module";
+import { RouterModule } from "@angular/router";
+import { StringWithXHTMLComponent } from "./lib/widgets/string-with-xhtml/string-with-xhtml.component";
+import { HtmlEditorComponent } from "./lib/widgets/string-with-xhtml/html-editor.compontent";
+import { QuillModule } from "ngx-quill";
+import { LinkIdComponent } from "./lib/widgets/link-id/link-id.component";
+import { ExpressionExtensionComponent } from "./lib/widgets/initial-expression/expression-extension.component";
+import { LaunchContextComponent } from "./lib/widgets/launch-context/launch-context.component";
+import { DateFormatExtensionComponent } from "./lib/widgets/date-format-extension/date-format-extension.component";
+import { HelpInfoComponent } from './help-info/help-info.component';
+import { AttachmentsCheckboxGroupComponent } from './lib/widgets/attachments-checkbox-group/attachments-checkbox-group.component';
+import { AttachmentFileSizeComponent } from './lib/widgets/attachment-file-size/attachment-file-size.component';
 
 @NgModule({
   declarations: [
@@ -98,6 +119,7 @@ import {HelpTextComponent} from "./lib/widgets/help-text/help-text.component";
     NgxSchemaFormComponent,
     ItemComponent,
     ConfirmDlgComponent,
+    ItemJsonEditorComponent,
     GridComponent,
     TableComponent,
     StringComponent,
@@ -114,6 +136,7 @@ import {HelpTextComponent} from "./lib/widgets/help-text/help-text.component";
     LeftLabelFormGroupComponent,
     LfbControlWidgetComponent,
     LfbArrayWidgetComponent,
+    HtmlEditorComponent,
     SideLabelCheckboxComponent,
     EnablewhenAnswerCodingComponent,
     AppJsonPipe,
@@ -136,6 +159,7 @@ import {HelpTextComponent} from "./lib/widgets/help-text/help-text.component";
     FhirExportDlgComponent,
     LoincNoticeComponent,
     StringWithCssComponent,
+    StringWithXHTMLComponent,
     RestrictionsComponent,
     RestrictionsOperatorComponent,
     ObservationLinkPeriodComponent,
@@ -154,7 +178,17 @@ import {HelpTextComponent} from "./lib/widgets/help-text/help-text.component";
     TextAreaComponent,
     DatetimeComponent,
     EditableLinkIdComponent,
-    HelpTextComponent
+    HelpTextComponent,
+    FormListComponent,
+    PaginatorComponent,
+    ToasterComponent,
+    LinkIdComponent,
+    LaunchContextComponent,
+    ExpressionExtensionComponent,
+    DateFormatExtensionComponent,
+    HelpInfoComponent,
+    AttachmentsCheckboxGroupComponent,
+    AttachmentFileSizeComponent
   ],
   imports: [
     BrowserModule,
@@ -179,6 +213,7 @@ import {HelpTextComponent} from "./lib/widgets/help-text/help-text.component";
     MatToolbarModule,
     MatTooltipModule,
     NgbModule,
+    RouterModule,
     SchemaFormModule.forRoot(),
     TreeModule,
     ReactiveFormsModule,
@@ -188,11 +223,60 @@ import {HelpTextComponent} from "./lib/widgets/help-text/help-text.component";
     AutoCompleteComponent,
     LabelComponent,
     CdkCopyToClipboard,
-    CodemirrorModule
+    CodemirrorModule,
+    MatSortModule,
+    MatTableModule,
+    AppRoutingModule,
+    MsalModule.forRoot(new PublicClientApplication({
+      auth: {
+        clientId: environment.msalClientId, // From the app registration in Azure AD
+        authority: environment.msalAuthority,
+        redirectUri: `${window.origin}/auth-callback`, // Redirect URI
+      },
+      cache: {
+        cacheLocation: 'localStorage',
+        storeAuthStateInCookie: false,
+      }
+    }), {
+      interactionType: InteractionType.Redirect, // MSAL Guard Configuration
+      authRequest: {
+        scopes: ['openid', 'profile', 'user.read']
+      }
+    }, {
+      interactionType: InteractionType.Redirect, // MSAL Interceptor Configuration
+      protectedResourceMap: new Map([
+        ['https://graph.microsoft.com/v1.0/me', ['user.read']]
+      ])
+    }),
+    QuillModule.forRoot({
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+          ['image', 'link'],
+          [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }], //, { 'list': 'check' }],
+          [{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
+          //[{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
+          //[{ 'direction': 'rtl' }],                         // text direction
+
+          //[{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+          [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+          [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+          //[{ 'font': [] }],
+          //[{ 'align': [] }]
+        ],
+        table: true
+      }
+    })
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  providers: [{provide: WidgetRegistry, useClass: LformsWidgetRegistry},
-    AppJsonPipe]
+  providers: [
+    MsalService,
+    MsalGuard,
+    MsalBroadcastService,
+    { provide: WidgetRegistry, useClass: LformsWidgetRegistry },
+    AppJsonPipe
+  ]
 })
 export class AppModule implements DoBootstrap {
   ngDoBootstrap(appRef: ApplicationRef) {

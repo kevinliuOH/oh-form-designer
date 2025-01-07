@@ -7,16 +7,6 @@
   <mat-tab-group [mat-stretch-tabs]="true" [selectedIndex]="activeTopLevelTabIndex" (selectedIndexChange)="activeTopLevelTabIndex=$event">
     <mat-tab label="View Rendered Form">
       <ng-template matTabContent>
-        <div>
-          <div class="pt-1">This preview is being handled by
-            <a href="https://lhncbc.github.io/lforms/" class="link-primary" target="_blank">LHC-Forms</a>,
-            which you can also use via the
-            <a href="https://lhncbc.github.io/questionnaire-viewer/" class="link-primary" target="_blank">Questionnaire Viewer</a>,
-            or in your own applications.
-          </div>
-          <small class="float-sm-end fw-bold">LForms version: {{formService.lformsVersion}}</small>
-          <div>&nbsp;</div> <!-- Needed to float the above div -->
-        </div>
         <ng-container *ngIf="lformsErrors">
           <div class="card bg-danger-subtle text-center">
             <div class="lforms-validation">{{lformsErrors}}</div>
@@ -34,7 +24,7 @@
       <ng-template matTabContent>
         <mat-tab-group class="preview-json-tabs bg-light" [mat-stretch-tabs]="false"
                          [(selectedIndex)]="activeJsonTabIndex" (selectedIndexChange)="onJsonVersionSelected($event)">
-          <ng-container *ngFor="let fmt of ['R4', 'STU3']">
+          <ng-container *ngFor="let fmt of ['R4']">
             <mat-tab>
               <ng-template matTabLabel>{{ fmt }} Version</ng-template>
               <ng-template matTabContent>
@@ -50,8 +40,13 @@
   </mat-tab-group>
   <lfb-spinner [show]="spinner$ | async"></lfb-spinner>
 </mat-dialog-content>
-<mat-dialog-actions class="border-top pe-3 pt-3" align="end">
-  <button class="btn btn-primary" (click)="close()">Close</button>
+<mat-dialog-actions class="border-top pe-3 pt-3" >
+  <button class="btn btn-outline-primary me-2" (click)="publish()"
+          [disabled]="!isApprover || (data?.questionnaire.status === 'active' || data?.formItem?.status === StatusEnum.Active)">Publish</button>
+  <div>
+    <button class="btn btn-outline-primary me-2" (click)="save()" [disabled]="!isBuilder">Save as Draft</button>
+    <button class="btn btn-primary " (click)="close()">Close</button>
+  </div>
 </mat-dialog-actions>
 
 <ng-template #validations let-fhirVersion>

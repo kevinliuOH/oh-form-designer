@@ -1,0 +1,28 @@
+<div class="widget" [ngClass]="{'row': labelPosition === 'left', 'm-0' : true}">
+    <!-- Label -->
+    <lfb-label *ngIf="!nolabel"
+    [for]="id"
+    [title]="schema.title"
+    [helpMessage]="schema.description"
+    [ngClass]="labelClasses"
+  ></lfb-label>
+
+    <!-- Input box -->
+    <div [ngClass]="controlClasses">
+      <input
+        type="number"
+        class="form-control"
+        [id]="id"
+        [value]="formProperty.value"
+        (input)="onInputChange($event)"
+        min="0"
+      />
+       <!-- Validation Error Message -->
+    <small *ngIf="errorMessage" class="text-danger">{{ errorMessage }}</small>
+    </div>
+
+   <!-- Converted value as plain text -->
+   <div class="col-sm-3 text-muted align-self-center" style="font-size: 14px;">
+    {{ convertedValue }}
+  </div>
+</div>

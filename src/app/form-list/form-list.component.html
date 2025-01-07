@@ -1,0 +1,71 @@
+<div class="card-body content">
+  <div>
+    <h4 class="ms-2">Forms</h4>
+    <p class="ms-4"></p>
+    <hr/>
+
+    <div class="container">
+      <div class="ms-1">
+        <label class="me-2">Filter: </label>
+        <i class="fal fa-search position-absolute mt-2 ml-1"></i>
+        <input class="form-control ms-1 px-4 w-75" style="display: inline-block" matInput (keyup)="applyFilter($event)" placeholder="Filter on name, status or date time to filter" size="100">
+      </div>
+      <lfb-spinner [show]="spinner$ | async"></lfb-spinner>
+      <table class="table table-striped" mat-table [dataSource]="dataSource" matSort (matSortChange)="sortData()">
+        <!-- Name Column -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="w-50"> Name </th>
+          <td mat-cell *matCellDef="let element">
+              <span (click)="onClick(element)"
+                style="cursor: pointer; color: blue; text-decoration: underline;"
+              >
+                  {{ element.name }}
+              </span>
+          </td>
+        </ng-container>
+
+        <!-- Version Column -->
+        <ng-container matColumnDef="version">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Version </th>
+          <td mat-cell *matCellDef="let element"> {{ element.version | number: '1.1-1' }} </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Status </th>
+          <td mat-cell *matCellDef="let element"> {{ element.status }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="dateTime">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Date Time </th>
+          <td mat-cell *matCellDef="let element"> {{ element.dateTime }} 
+            <span >
+            <fa-icon
+              *ngIf="isBuilder && element.status === StatusEnum.Draft"
+              class="ml-2 clickable" [icon]="formDeleteIcon"
+              matTooltip="Delete"
+              (click)="confirmFormDelete(element)">
+            </fa-icon>
+            <mat-icon class="ml-1 clickable custom-icon"  *ngIf="element.status === StatusEnum.Active"
+                color="primary"
+                matTooltip="Download"
+                 (click)="downloadForm(element)">file_download</mat-icon>
+              </span>
+            </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+      <hr/>
+      <lfb-paginator
+        class="mt-2"
+        *ngIf="this.currentDataSet.length > 0"
+        [totalEntries]="this.currentDataSet.length"
+        [pageSize]="pageSize"
+        [currentPage]="currentPage"
+        (pageChange)="onPageChange($event)">
+      </lfb-paginator>
+    </div>
+  </div>
+</div>
+
